@@ -89,9 +89,21 @@ variable "delivery_rules" {
   default     = {}
 }
 
-variable "custom_domain" {
-  description = "The custom domain name attached to the cdn endpoint"
+variable "cname_record" {
+  description = "The CName record attached to the cdn endpoint (without the zone). Optional, required when custom domain is enabled"
   type        = string
+  default     = ""
+}
+
+variable "dns_zone" {
+  description = "The DNS zone. Optional, required only when custom domain is enabled"
+  default     = ""
+
+}
+
+variable "dns_rg" {
+  description = "The resource group of the DNS zone. Optional, required only when custom domain is enabled"
+  default     = ""
 }
 
 variable "custom_tags" {

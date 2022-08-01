@@ -86,47 +86,35 @@ resource "azurerm_cdn_endpoint" "endpoint" {
     }
   }
 
-  # delivery_rule {
-  #   name  = "RedirectRules"
-  #   order = 1
+  tags = local.tags
+}
 
-  #   request_scheme_condition {
-  #     match_values = ["HTTP"]
-  #     operator     = "Equal"
-  #   }
+data "azurerm_dns_zone" "dns_zone" {
+  count               = var.dns_zone != "" ? 1 : 0
+  name                = var.dns_zone
+  resource_group_name = var.dns_rg
+}
 
-  #   url_redirect_action {
-  #     redirect_type = "PermanentRedirect"
-  #     protocol      = "Https"
-  #     hostname      = var.custom_domain
-  #   }
-  # }
-
-  # delivery_rule {
-  #   name  = "ReWriteRules"
-  #   order = 2
-
-  #   request_uri_condition {
-  #     negate_condition = false
-  #     operator         = "Any"
-  #   }
-
-  #   url_path_condition {
-  #     match_values = [
-  #       "."
-  #     ]
-  #     negate_condition = true
-  #     operator         = "Contains"
-  #   }
-
-  #   url_rewrite_action {
-  #     destination             = "/index.html"
-  #     preserve_unmatched_path = false
-  #     source_pattern          = "/"
-  #   }
-  # }
+resource "azurerm_dns_cname_record" "cname_record" {
+  count               = var.cname_record != "" ? 1 : 0
+  name                = var.cname_record
+  zone_name           = data.azurerm_dns_zone.dns_zone[0].name
+  resource_group_name = data.azurerm_dns_zone.dns_zone[0].resource_group_name
+  ttl                 = 300
+  target_resource_id  = azurerm_cdn_endpoint.endpoint.id
 
   tags = local.tags
+}
+
+resource "azurerm_cdn_endpoint_custom_domain" "custom_domain" {
+  count           = var.cname_record != "" ? 1 : 0
+  name            = "custom-domain-${var.cname_record}"
+  cdn_endpoint_id = azurerm_cdn_endpoint.endpoint.id
+  host_name       = local.custom_domain_host_name
+
+  depends_on = [
+    azurerm_dns_cname_record.cname_record
+  ]
 }
 
 # resource "null_resource" "origin_group" {
