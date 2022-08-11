@@ -2,7 +2,7 @@
 
 ## Overview
 
-This terraform module would provision Azure CDN profiles, CDN endpoints, Front door and all its dependencies
+This terraform module would provision Azure CDN profiles, CDN endpoints, custom domains and all its dependencies
 
 ## Pre-Commit hooks
 [.pre-commit-config.yaml](.pre-commit-config.yaml) file defines certain `pre-commit` hooks that are relevant to terraform, golang and common linting tasks. There are no custom hooks added.
@@ -94,3 +94,10 @@ If `make check` target is successful, developer is good to commit the code to pr
 - runs `conftests`. `conftests` make sure `policy` checks are successful.
 - runs `terratest`. This is integration test suit.
 - runs `opa` tests
+
+## Known Issues
+- The Origin Group feature is currently not supported by Terraform for `Standard Microsoft CDN`
+- Multiple origins is not supported and has dependency on origin group
+- The custom origin creation has a dependency on creating a CName record in DNS. In order to create a CName record, we need the url of the CDN endpoint and hence it had dependency on the CDN. Because of this cyclic dependency, it is not possible to create the CName record in its own module (DNS module). Instead, we are creating the CNAme in this module itself which is against our Platform principles
+- While destroying the infrastructure, it complains to delete the `CName record` before deleting the `Custom domain` which shouldn't be the case as CName Record was created before while `terraform apply`. But, this is a known issue with Azure. In a work around, we need to delete the CName record manually before exectuting `terraform destroy`
+- While importing certificates from key vault for custom domain configuration, it complains to grant `Microsoft.AzureFrontDoor-Cdn` service principal a "get-secret" permission. So, make sure it is added to the Key Vault access policy before creating the CDN using this module.

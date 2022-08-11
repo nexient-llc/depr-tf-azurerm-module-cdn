@@ -89,37 +89,48 @@ resource "azurerm_cdn_endpoint" "endpoint" {
   tags = local.tags
 }
 
-data "azurerm_dns_zone" "dns_zone" {
-  count               = var.dns_zone != "" ? 1 : 0
-  name                = var.dns_zone
-  resource_group_name = var.dns_rg
-}
-
 resource "azurerm_dns_cname_record" "cname_record" {
-  count               = var.cname_record != "" ? 1 : 0
-  name                = var.cname_record
-  zone_name           = data.azurerm_dns_zone.dns_zone[0].name
-  resource_group_name = data.azurerm_dns_zone.dns_zone[0].resource_group_name
+  count               = var.custom_domain.enable_custom_domain && var.custom_domain.create_cname_record ? 1 : 0
+  name                = var.custom_domain.cname_record
+  zone_name           = var.custom_domain.dns_zone
+  resource_group_name = var.custom_domain.dns_rg
   ttl                 = 300
   target_resource_id  = azurerm_cdn_endpoint.endpoint.id
 
   tags = local.tags
 }
 
+data "azurerm_key_vault" "key_vault" {
+  count = var.custom_user_managed_https.enable_custom_https ? 1 : 0
+
+  name                = var.custom_user_managed_https.key_vault_name
+  resource_group_name = var.custom_user_managed_https.key_vault_rg
+}
+
+data "azurerm_key_vault_certificate" "custom_https_cert" {
+  count = var.custom_user_managed_https.enable_custom_https ? 1 : 0
+
+  name         = var.custom_user_managed_https.certificate_secret_name
+  key_vault_id = data.azurerm_key_vault.key_vault[0].id
+}
+
 resource "azurerm_cdn_endpoint_custom_domain" "custom_domain" {
-  count           = var.cname_record != "" ? 1 : 0
-  name            = "custom-domain-${var.cname_record}"
+  count           = var.custom_domain.enable_custom_domain ? 1 : 0
+
+  name            = "custom-domain-${replace(var.custom_domain.cname_record, ".", "-")}"
   cdn_endpoint_id = azurerm_cdn_endpoint.endpoint.id
   host_name       = local.custom_domain_host_name
+
+  dynamic "user_managed_https" {
+    for_each = var.custom_user_managed_https.enable_custom_https ? [1] : []
+
+    content {
+      key_vault_certificate_id = data.azurerm_key_vault_certificate.custom_https_cert[0].id
+      tls_version              = "TLS12"
+    }
+  }
 
   depends_on = [
     azurerm_dns_cname_record.cname_record
   ]
 }
-
-# resource "null_resource" "origin_group" {
-#   count = length(var.origins)
-#   provisioner "local-exec" {
-#     command = "az cdn origin-group create -n ${var.origins[count.index].name}-origin-group  --endpoint-name ${azurerm_cdn_endpoint.endpoint.name} --profile-name ${azurerm_cdn_profile.cdn_profile.name} -g ${var.resource_group.name} --origins ${var.origins[count.index].name}"
-#   }
-# }

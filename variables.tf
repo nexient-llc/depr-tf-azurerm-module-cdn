@@ -84,27 +84,75 @@ variable "origins" {
 }
 
 variable "delivery_rules" {
-  description = "List of delivery rules for the endpoint"
+  description = "List of delivery rules for the endpoint. Currently supports only URL Rewrite and Redirect Actions"
   type        = any
   default     = {}
 }
 
-variable "cname_record" {
-  description = "The CName record attached to the cdn endpoint (without the zone). Optional, required when custom domain is enabled"
-  type        = string
-  default     = ""
+# Variables related to custom domain
+
+variable "custom_domain" {
+  description = "Inputs related to custom domain. cname_record should be without the zone name. cname_record, dns_zone and dns_rg are required if enable_custom_domain = true. If create_cname_record = false, user should manually create the cname record in the dns zone in the format <cdn_endpoint_name>.azureedge.net"
+  type = object({
+    enable_custom_domain = bool
+    create_cname_record  = bool
+    cname_record         = optional(string)
+    dns_zone             = optional(string)
+    dns_rg               = optional(string)
+  })
+  default = {
+    enable_custom_domain = false
+    create_cname_record  = false
+  }
+
+  validation {
+    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.cname_record, null) != null)
+    error_message = "The cname_record is mandatory when enable_custom_domain = true."
+  }
+
+  validation {
+    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.dns_zone, null) != null)
+    error_message = "The dns_zone is mandatory when enable_custom_domain = true."
+  }
+
+  validation {
+    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.dns_rg, null) != null)
+    error_message = "The dns_rg is mandatory when enable_custom_domain = true."
+  }
+
 }
 
-variable "dns_zone" {
-  description = "The DNS zone. Optional, required only when custom domain is enabled"
-  default     = ""
+# Variables related to TLS
 
+variable "custom_user_managed_https" {
+  description = "Inputs related to custom HTTPS. key_vault_name, key_vault_rg and certificate_secret_name are mandatory if enable_custom_https = true. It is mandatory to add the service principal for Microsoft.AzureFrontDoor-Cdn to the Access Policy of KeyVault and grant a get-secret permission for the custom https to work"
+  type = object({
+    enable_custom_https     = bool
+    key_vault_name          = optional(string)
+    key_vault_rg            = optional(string)
+    certificate_secret_name = optional(string)
+  })
+
+  default = {
+    enable_custom_https = false
+  }
+
+  validation {
+    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.key_vault_name, null) != null)
+    error_message = "The key_vault_name is mandatory when enable_custom_https = true."
+  }
+
+  validation {
+    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.key_vault_rg, null) != null)
+    error_message = "The key_vault_rg is mandatory when enable_custom_https = true."
+  }
+
+  validation {
+    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.certificate_secret_name, null) != null)
+    error_message = "The certificate_secret_name is mandatory when enable_custom_https = true."
+  }
 }
 
-variable "dns_rg" {
-  description = "The resource group of the DNS zone. Optional, required only when custom domain is enabled"
-  default     = ""
-}
 
 variable "custom_tags" {
   description = "Any custom tags to be associated with the resource"
