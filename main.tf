@@ -82,7 +82,6 @@ resource "azurerm_cdn_endpoint" "endpoint" {
 
         }
       }
-
     }
   }
 

@@ -92,34 +92,36 @@ variable "delivery_rules" {
 # Variables related to custom domain
 
 variable "custom_domain" {
-  description = "Inputs related to custom domain. cname_record should be without the zone name. cname_record, dns_zone and dns_rg are required if enable_custom_domain = true. If create_cname_record = false, user should manually create the cname record in the dns zone in the format <cdn_endpoint_name>.azureedge.net"
+  description = "Inputs related to custom domain. cname_record should be without the zone name. cname_record is required if enable_custom_domain = true. dns_zone and dns_rg are required if cname_record is not fqdn. If create_cname_record = false, user should manually create the cname record in the dns zone in the format <cdn_endpoint_name>.azureedge.net, else dns_zone and dns_rg are required"
   type = object({
     enable_custom_domain = bool
     create_cname_record  = bool
-    cname_record         = optional(string)
-    dns_zone             = optional(string)
-    dns_rg               = optional(string)
+    cname_record         = string
+    dns_zone             = string
+    dns_rg               = string
   })
   default = {
     enable_custom_domain = false
     create_cname_record  = false
+    cname_record = null
+    dns_zone = null
+    dns_rg = null
   }
 
   validation {
-    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.cname_record, null) != null)
-    error_message = "The cname_record is mandatory when enable_custom_domain = true."
+    condition     = ((var.custom_domain.enable_custom_domain && coalesce(var.custom_domain.cname_record, "notset") != "notset") || !var.custom_domain.enable_custom_domain)
+    error_message = "The cname_record cannot be empty when enable_custom_domain = true."
   }
 
   validation {
-    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.dns_zone, null) != null)
-    error_message = "The dns_zone is mandatory when enable_custom_domain = true."
+    condition     = ((var.custom_domain.create_cname_record && coalesce(var.custom_domain.dns_zone, "notset") != "notset") || !var.custom_domain.create_cname_record)
+    error_message = "The dns_zone cannot be empty when create_cname_record = true."
   }
 
   validation {
-    condition     = (var.custom_domain.enable_custom_domain && try(var.custom_domain.dns_rg, null) != null)
-    error_message = "The dns_rg is mandatory when enable_custom_domain = true."
+    condition     = ((var.custom_domain.create_cname_record && coalesce(var.custom_domain.dns_rg, "notset") != "notset") || !var.custom_domain.create_cname_record)
+    error_message = "The dns_rg cannot be empty when create_cname_record = true."
   }
-
 }
 
 # Variables related to TLS
@@ -128,28 +130,31 @@ variable "custom_user_managed_https" {
   description = "Inputs related to custom HTTPS. key_vault_name, key_vault_rg and certificate_secret_name are mandatory if enable_custom_https = true. It is mandatory to add the service principal for Microsoft.AzureFrontDoor-Cdn to the Access Policy of KeyVault and grant a get-secret permission for the custom https to work"
   type = object({
     enable_custom_https     = bool
-    key_vault_name          = optional(string)
-    key_vault_rg            = optional(string)
-    certificate_secret_name = optional(string)
+    key_vault_name          = string
+    key_vault_rg            = string
+    certificate_secret_name = string
   })
 
   default = {
     enable_custom_https = false
+    key_vault_name = null
+    key_vault_rg = null
+    certificate_secret_name = null
   }
 
   validation {
-    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.key_vault_name, null) != null)
-    error_message = "The key_vault_name is mandatory when enable_custom_https = true."
+    condition     = ((var.custom_user_managed_https.enable_custom_https && coalesce(var.custom_user_managed_https.key_vault_name, "notset") != "notset") || !var.custom_user_managed_https.enable_custom_https)
+    error_message = "The key_vault_name cannot be empty when enable_custom_https = true."
   }
 
   validation {
-    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.key_vault_rg, null) != null)
-    error_message = "The key_vault_rg is mandatory when enable_custom_https = true."
+    condition     = ((var.custom_user_managed_https.enable_custom_https && coalesce(var.custom_user_managed_https.key_vault_rg, "notset") != "notset") || !var.custom_user_managed_https.enable_custom_https)
+    error_message = "The key_vault_rg cannot be empty when enable_custom_https = true."
   }
 
   validation {
-    condition     = (var.custom_user_managed_https.enable_custom_https && try(var.custom_user_managed_https.certificate_secret_name, null) != null)
-    error_message = "The certificate_secret_name is mandatory when enable_custom_https = true."
+    condition     = ((var.custom_user_managed_https.enable_custom_https && coalesce(var.custom_user_managed_https.certificate_secret_name, "notset") != "notset") || !var.custom_user_managed_https.enable_custom_https)
+    error_message = "The certificate_secret_name cannot be empty when enable_custom_https = true."
   }
 }
 
