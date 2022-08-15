@@ -114,7 +114,7 @@ data "azurerm_key_vault_certificate" "custom_https_cert" {
 }
 
 resource "azurerm_cdn_endpoint_custom_domain" "custom_domain" {
-  count           = var.custom_domain.enable_custom_domain ? 1 : 0
+  count = var.custom_domain.enable_custom_domain ? 1 : 0
 
   name            = "custom-domain-${replace(var.custom_domain.cname_record, ".", "-")}"
   cdn_endpoint_id = azurerm_cdn_endpoint.endpoint.id

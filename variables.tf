@@ -103,9 +103,9 @@ variable "custom_domain" {
   default = {
     enable_custom_domain = false
     create_cname_record  = false
-    cname_record = null
-    dns_zone = null
-    dns_rg = null
+    cname_record         = null
+    dns_zone             = null
+    dns_rg               = null
   }
 
   validation {
@@ -136,9 +136,9 @@ variable "custom_user_managed_https" {
   })
 
   default = {
-    enable_custom_https = false
-    key_vault_name = null
-    key_vault_rg = null
+    enable_custom_https     = false
+    key_vault_name          = null
+    key_vault_rg            = null
     certificate_secret_name = null
   }
 
