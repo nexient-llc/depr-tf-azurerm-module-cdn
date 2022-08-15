@@ -36,7 +36,7 @@ func (suite *TerraTestSuite) SetupSuite() {
 		TerraformDir: tempTestFolder,
 		VarFiles:     [](string){path.Join(pwd, "..", "minimal.tfvars")},
 	})
-	// unable to make the terraform idempotent for the User Identity (identity_ids)
+	// unable to make the terraform idempotent for the CDN delivery_rules (request_uri_condition, url_path_condition)
 	terraform.InitAndApply(suite.T(), suite.TerraformOptions)
 	suite.suiteSetupDone = true
 }
