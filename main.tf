@@ -38,8 +38,8 @@ resource "azurerm_cdn_endpoint" "endpoint" {
       dynamic "request_scheme_condition" {
         for_each = lookup(delivery_rule.value, "request_scheme_condition", null) != null ? [1] : []
         content {
-          match_values = delivery_rule.value.request_scheme_condition.match_values
-          operator     = delivery_rule.value.request_scheme_condition.operator
+          match_values     = delivery_rule.value.request_scheme_condition.match_values
+          operator         = delivery_rule.value.request_scheme_condition.operator
           negate_condition = lookup(delivery_rule.value.request_scheme_condition, "negate_condition", false)
 
         }
@@ -50,8 +50,8 @@ resource "azurerm_cdn_endpoint" "endpoint" {
         content {
           negate_condition = delivery_rule.value.request_uri_condition.negate_condition
           operator         = delivery_rule.value.request_uri_condition.operator
-          match_values = lookup(delivery_rule.value.request_uri_condition, "match_values", null)
-          transforms = lookup(delivery_rule.value.request_uri_condition, "transforms", null)
+          match_values     = lookup(delivery_rule.value.request_uri_condition, "match_values", null)
+          transforms       = lookup(delivery_rule.value.request_uri_condition, "transforms", null)
 
 
         }
@@ -63,7 +63,7 @@ resource "azurerm_cdn_endpoint" "endpoint" {
           match_values     = delivery_rule.value.url_path_condition.match_values
           negate_condition = delivery_rule.value.url_path_condition.negate_condition
           operator         = delivery_rule.value.url_path_condition.operator
-          transforms = lookup(delivery_rule.value.url_path_condition, "transforms", null)
+          transforms       = lookup(delivery_rule.value.url_path_condition, "transforms", null)
 
         }
       }
@@ -74,9 +74,9 @@ resource "azurerm_cdn_endpoint" "endpoint" {
           redirect_type = delivery_rule.value.url_redirect_action.redirect_type
           protocol      = delivery_rule.value.url_redirect_action.protocol
           hostname      = delivery_rule.value.url_redirect_action.hostname
-          path = lookup(delivery_rule.value.url_redirect_action, "path", null)
-          fragment = lookup(delivery_rule.value.url_redirect_action, "fragment", null)
-          query_string = lookup(delivery_rule.value.url_redirect_action, "query_string", null)
+          path          = lookup(delivery_rule.value.url_redirect_action, "path", null)
+          fragment      = lookup(delivery_rule.value.url_redirect_action, "fragment", null)
+          query_string  = lookup(delivery_rule.value.url_redirect_action, "query_string", null)
 
         }
       }
