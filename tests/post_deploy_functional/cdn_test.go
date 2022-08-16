@@ -59,11 +59,7 @@ func (suite *TerraTestSuite) TestCDN() {
 	actualCdnEndpointName := terraform.Output(suite.T(), suite.TerraformOptions, "cdn_endpoint_name")
 	expectedCdnProfileName := "demo-eus-dev-000-cdn-000"
 	expectedCdnEndpointName := "demo-eus-dev-000-ep-000"
-	//expectedRgName := "demofn-eus-dev-000-rg-000"
-	// NOTE: "subscriptionID" is overridden by the environment variable "ARM_SUBSCRIPTION_ID". <>
-	//subscriptionID := ""
 	suite.Equal(actualCdnProfileName, expectedCdnProfileName, "The CDN profile names should match")
 	suite.Equal(actualCdnEndpointName, expectedCdnEndpointName, "The CDN endpoint names should match")
 	suite.NotEmpty(actualCdnProfileName, "Profile Name cannot be empty")
-	// azure.AppExists(suite.T(), expectedFunctionName, expectedRgName, subscriptionID)
 }
